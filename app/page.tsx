@@ -11,14 +11,22 @@ function ColorBlock({color}: {color: Property.BackgroundColor}) {
     return <div style={{backgroundColor: color}} className="h-6 w-6 rounded-2xl"></div>
 }
 
-function PixelCanvas({width, height}) {
+function PixelCanvas({width, height, scale}) {
     const ref = useRef<HTMLCanvasElement>(null);
     useEffect(() => {
-        const ctx = ref.current!.getContext("2d")!
+        const canvas = ref.current!
+        const ctx = canvas.getContext("2d")!
         ctx.fillStyle = "red"
-        ctx.fillRect(0, 0, 100, 100)
+        ctx.fillRect(0, 0, width * scale, height * scale)
+        console.log("position", canvas.getBoundingClientRect())
+        canvas.addEventListener("mousemove", (event) => {
+            const rect = canvas.getBoundingClientRect()
+            const x = Math.floor((event.x - rect.x) / scale)
+            const y = Math.floor((event.y - rect.y) / scale)
+            console.log(x, y)
+        })
     })
-    return <canvas ref={ref} width={width} height={height}></canvas>
+    return <canvas ref={ref} width={width * scale} height={height * scale}></canvas>
 }
 
 export default function Home() {
@@ -29,7 +37,7 @@ export default function Home() {
           <p>hi</p>
           <ColorBlock color={color}></ColorBlock>
           {pallete.map((color, i) => <ColorButton key={i} setColor={setColor} color={color}></ColorButton>)}
-          <PixelCanvas width={100} height={100}></PixelCanvas>
+          <PixelCanvas width={64} height={64} scale={10}></PixelCanvas>
       </div>
   );
 }
