@@ -12,12 +12,13 @@ function ColorBlock({color}: {color: Property.BackgroundColor}) {
 }
 
 export default function Home() {
+    const pallete: Property.BackgroundColor[] = ["red", "blue", "green", "yellow", "orange", "purple", "pink", "brown", "grey", "black", "white"];
     const [color, setColor] = useState<Property.BackgroundColor>("red");
     return (
       <div>
           <p>hi</p>
           <ColorBlock color={color}></ColorBlock>
-          <ColorButton setColor={setColor} color={"grey"}></ColorButton>
+          {pallete.map((color, i) => <ColorButton key={i} setColor={setColor} color={color}></ColorButton>)}
       </div>
   );
 }
