@@ -25,11 +25,15 @@ function PixelCanvas({width, height, scale, picked_color}) {
         console.log("position", canvas.getBoundingClientRect())
         let mouse_x = 0
         let mouse_y = 0
+        let paint = false
         canvas.addEventListener("mousemove", (event) => {
             const rect = canvas.getBoundingClientRect()
             mouse_x = Math.floor((event.x - rect.x) / scale)
             mouse_y = Math.floor((event.y - rect.y) / scale)
+            if (paint) fillPixel(mouse_x, mouse_y, picked_color)
         })
+        canvas.addEventListener("mouseup", (event) => paint = false)
+        canvas.addEventListener("mousedown", (event) => paint = true)
         canvas.addEventListener("click", (event) => {
             console.log("clicked", mouse_x, mouse_y)
             fillPixel(mouse_x, mouse_y, picked_color);
