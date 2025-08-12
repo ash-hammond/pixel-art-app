@@ -1,5 +1,17 @@
-- Paint pixels on canvas
-- Resize canvas
+MVP:
+- README.md
+- User Auth
+- Export
+- Load/Save
+- Branding
+- Visual Polish
 
-Nice to haves:
+Back Burner:
 - SFX
+- Draw line between pixels when drag painting
+- Resize canvas
+- Tools (bucket, picker)
+- Color picker
+- Layers
+- Mirror
+- Animations
