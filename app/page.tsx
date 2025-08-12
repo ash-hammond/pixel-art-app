@@ -13,33 +13,31 @@ function ColorBlock({color}: {color: Property.BackgroundColor}) {
 
 function PixelCanvas({width, height, scale, picked_color}) {
     const ref = useRef<HTMLCanvasElement>(null);
+    let canvas: HTMLCanvasElement
+    let paint = false
+    let ctx: CanvasRenderingContext2D
+    function fillPixel(x, y, color) {
+        ctx.fillStyle = color
+        ctx.fillRect(x * scale, y * scale, scale, scale);
+    }
+
     useEffect(() => {
-        const canvas = ref.current!
-        const ctx = canvas.getContext("2d")!
+        canvas = ref.current!
+        ctx = canvas.getContext("2d")!
         ctx.fillStyle = "red"
-        function fillPixel(x, y, color) {
-            ctx.fillStyle = color
-            ctx.fillRect(x * scale, y * scale, scale, scale);
-        }
         ctx.fillRect(0, 0, width * scale, height * scale)
-        console.log("position", canvas.getBoundingClientRect())
-        let mouse_x = 0
-        let mouse_y = 0
-        let paint = false
-        canvas.addEventListener("mousemove", (event) => {
-            const rect = canvas.getBoundingClientRect()
-            mouse_x = Math.floor((event.x - rect.x) / scale)
-            mouse_y = Math.floor((event.y - rect.y) / scale)
-            if (paint) fillPixel(mouse_x, mouse_y, picked_color)
-        })
-        canvas.addEventListener("mouseup", (event) => paint = false)
-        canvas.addEventListener("mousedown", (event) => paint = true)
-        canvas.addEventListener("click", (event) => {
-            console.log("clicked", mouse_x, mouse_y)
-            fillPixel(mouse_x, mouse_y, picked_color);
-        })
     })
-    return <canvas ref={ref} width={width * scale} height={height * scale}></canvas>
+    let mouse_x = 0
+    let mouse_y = 0
+    return <canvas ref={ref} width={width * scale} height={height * scale} onClick={() => {
+        console.log("clicked", mouse_x, mouse_y)
+        fillPixel(mouse_x, mouse_y, picked_color);
+    }} onMouseMove={(event) => {
+        const rect = canvas.getBoundingClientRect()
+        mouse_x = Math.floor((event.clientX - rect.x) / scale)
+        mouse_y = Math.floor((event.clientY - rect.y) / scale)
+        if (paint) fillPixel(mouse_x, mouse_y, picked_color)
+    }} onMouseDown={() => paint = true} onMouseUp={() => paint = false}></canvas>
 }
 
 export default function Home() {
