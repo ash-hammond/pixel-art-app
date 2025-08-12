@@ -1,3 +1,5 @@
-- Color Picker
 - Paint pixels on canvas
 - Resize canvas
+
+Nice to haves:
+- SFX
