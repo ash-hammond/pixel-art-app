@@ -79,7 +79,7 @@ function PixelCanvas({width, height, scale, picked_color, pixels, setPixels}: {w
             }
         }
         else mouse.current = pixel
-    }} onMouseLeave={() => mouse.current = null} onMouseDown={() => paint.current = true} onMouseUp={() => paint.current = false}></canvas>
+    }} onMouseLeave={() => {mouse.current = null; paint.current = false}} onMouseDown={() => paint.current = true} onMouseUp={() => paint.current = false}></canvas>
 }
 
 export default function Home() {
