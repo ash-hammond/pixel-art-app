@@ -12,7 +12,7 @@ function ColorBlock({color}: {color: Property.BackgroundColor}) {
 
 function PixelCanvas({width, height, scale, picked_color, pixels, setPixels}: {width: number, height: number, scale: number, picked_color: Property.BackgroundColor, pixels: Property.BackgroundColor[], setPixels: Dispatch<SetStateAction<Property.BackgroundColor[]>>}) {
     const ref = useRef<HTMLCanvasElement>(null);
-    let paint = false
+    const paint = useRef(false)
 
     useEffect(() => {
         const ctx = ref.current!.getContext("2d")!
@@ -27,31 +27,24 @@ function PixelCanvas({width, height, scale, picked_color, pixels, setPixels}: {w
     }, [pixels, height, scale, width])
     let mouse_x = 0
     let mouse_y = 0
+
     function positionToIndex(x: number, y: number) {
         return y * width + x
     }
-    return <canvas ref={ref} width={width * scale} height={height * scale} onClick={() => {
-        console.log("clicked", mouse_x, mouse_y)
-        //fillPixel(mouse_x, mouse_y, picked_color);
+
+    function paintPixel() {
         setPixels(p => {
             const n = p.slice()
             n[positionToIndex(mouse_x, mouse_y)] = picked_color
             return n
         })
-    }} onMouseMove={(event) => {
+    }
+    return <canvas ref={ref} width={width * scale} height={height * scale} onClick={paintPixel} onMouseMove={(event) => {
         const rect = ref.current!.getBoundingClientRect()
         mouse_x = Math.floor((event.clientX - rect.x) / scale)
         mouse_y = Math.floor((event.clientY - rect.y) / scale)
-        if (paint) {
-            setPixels(p => {
-                const n = p.slice()
-                n[positionToIndex(mouse_x, mouse_y)] = picked_color
-                return n
-            })
-        }
-    }} onLoad={() => {
-
-    }} onMouseDown={() => paint = true} onMouseUp={() => paint = false}></canvas>
+        if (paint.current) paintPixel()
+    }} onMouseDown={() => paint.current = true} onMouseUp={() => paint.current = false}></canvas>
 }
 
 export default function Home() {
