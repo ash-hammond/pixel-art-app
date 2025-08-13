@@ -5,7 +5,7 @@ import {Box} from "@mui/system";
 import {Button, Container, Grid, List, ListItemButton, Modal, Paper, Stack, Typography} from "@mui/material";
 import {getUserProjectsCollection} from "@/helpers/database";
 
-export function TopBar({user, auth, db, forceUpdate, loadProject}: {
+export function TopBar({user, auth, db, forceUpdate, loadProject }: {
     loadProject: (id: string) => void,
     db: Firestore,
     user: User | null,

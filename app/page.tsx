@@ -1,7 +1,7 @@
 'use client'
 import {Property} from "csstype";
 import {useRef, useState} from "react";
-import {Button, Container, Snackbar, Stack, Typography} from "@mui/material";
+import {Button, Container, Skeleton, Snackbar, Stack, Typography} from "@mui/material";
 import {firebaseConfig, getProjectsPath, getUserProjectsCollection} from "@/helpers/database"
 // Import the functions you need from the SDKs you need
 import {FirebaseApp, initializeApp} from "firebase/app";
@@ -42,6 +42,7 @@ export default function Home() {
     const [projectId, setProjectId] = useState<string | null>(null)
     const DEFAULT_PROJECT_NAME = "New Project"
     const [projectName, setProjectName] = useState(DEFAULT_PROJECT_NAME);
+    const [loading, setLoading] = useState(false)
     const app = useRef<FirebaseApp>(null)
     if (app.current == null) {
         app.current = initializeApp(firebaseConfig)
@@ -72,11 +73,13 @@ export default function Home() {
     }
 
     async function loadProject(id: string) {
+        setLoading(true)
         const p = await getDoc(doc(db, getProjectsPath(user!), id))
         const data = p.data()!
         setPixels(data.pixels)
         setProjectName(data.name)
         setProjectId(id)
+        setLoading(false)
     }
 
     function clearPixels(color: string) {
@@ -93,6 +96,7 @@ export default function Home() {
         }
         setProjectName(DEFAULT_PROJECT_NAME)
     }
+    const scale = 10
 
     //TODO warn on leave w/out saving
     return (
@@ -131,8 +135,12 @@ export default function Home() {
                             {palette.map((color, i) => <ColorButton key={i} setColor={setColor} color={color}></ColorButton>)}
                         </Stack>
                     <Box>
-                        <PixelCanvas ref={canvasRef} width={width} picked_color={color} height={height} scale={10}
-                                     pixels={pixels} setPixels={setPixels}></PixelCanvas>
+                        {loading ?
+                            <Skeleton variant="rectangular" width={width * scale} height={height * scale}/>
+                        :
+                            <PixelCanvas ref={canvasRef} width={width} picked_color={color} height={height} scale={scale}
+                                         pixels={pixels} setPixels={setPixels}></PixelCanvas>
+                        }
                     </Box>
                 </Stack>
             </Container>
