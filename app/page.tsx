@@ -1,40 +1,23 @@
 'use client'
 import {Property} from "csstype";
-import {Dispatch, SetStateAction, useRef, useState} from "react";
-import {Button, Container, List, ListItemButton, Modal, Stack, Typography} from "@mui/material";
-
+import {useRef, useState} from "react";
+import {Button, Container, Stack, Typography} from "@mui/material";
+import {firebaseConfig, getProjectsPath, getUserProjectsCollection} from "@/helpers/database"
 // Import the functions you need from the SDKs you need
 import {FirebaseApp, initializeApp} from "firebase/app";
-import {Auth, getAuth, GithubAuthProvider, signInWithPopup, signOut, User} from "@firebase/auth";
+import {getAuth, User} from "@firebase/auth";
 import {Box} from "@mui/system";
-import {
-    addDoc,
-    collection,
-    deleteDoc,
-    doc,
-    Firestore,
-    getDoc,
-    getDocs,
-    getFirestore,
-    updateDoc
-} from "@firebase/firestore";
+import {addDoc, collection, deleteDoc, doc, Firestore, getDoc, getFirestore, updateDoc} from "@firebase/firestore";
 import {PixelCanvas} from "@/components/pixelCanvas";
 import {DeleteProjectButton} from "@/components/deleteProjectButton";
 import {ChangeProjectNameButton} from "@/components/changeProjectNameButton";
+import {TopBar} from "@/components/topBar";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-    apiKey: "AIzaSyBoSsmVIbFOFUxIT694874IJBRrLtKgG7I",
-    authDomain: "pixel-painter-eb21f.firebaseapp.com",
-    projectId: "pixel-painter-eb21f",
-    storageBucket: "pixel-painter-eb21f.firebasestorage.app",
-    messagingSenderId: "292877217298",
-    appId: "1:292877217298:web:79fd9e6eccbb052ee872cb",
-    measurementId: "G-P77XPN2ZJY"
-};
+
 
 function ColorButton({setColor, color}: {
     setColor: (color: Property.BackgroundColor) => void,
@@ -46,52 +29,6 @@ function ColorButton({setColor, color}: {
 
 function ColorBlock({color}: { color: Property.BackgroundColor }) {
     return <div style={{backgroundColor: color}} className="border h-6 w-6 rounded-2xl"></div>
-}
-
-function TopBar({user, auth, db, forceUpdate, loadProject}: {loadProject: (id: string) => void, db: Firestore, user: User | null, auth: Auth, forceUpdate: Dispatch<SetStateAction<boolean>>}) {
-    interface Project {
-        name: string,
-        id: string,
-    }
-    const [projects, setProjects] = useState<Project[] | null>(null)
-    if (user) {
-        return <Box><Button onClick={async () => {
-            await signOut(auth)
-            forceUpdate((n) => !n)
-        }}>Logout</Button>
-            <Button onClick={async () => {
-                const snapshot = await getDocs(getUserProjectsCollection(db, user))
-                setProjects(snapshot.docs.map((doc) => {
-                    return {
-                        name: doc.get("name"),
-                        id: doc.id,
-                    }
-                }))
-            }}>Open</Button>
-            <Modal open={Boolean(projects)}>
-                <List>
-                    {projects?.map((project: Project, id) => <ListItemButton key={id} onClick={() => {
-                        setProjects(null)
-                        loadProject(project.id)
-                    }
-                    }>{project.name}</ListItemButton>)}
-                    <ListItemButton>Test</ListItemButton>
-                </List>
-            </Modal>
-        </Box>
-    }
-        return <Button onClick={async () => {
-             await signInWithPopup(auth, new GithubAuthProvider())
-            forceUpdate((n) => !n)
-        }}>Login with GitHub</Button>
-}
-
-function getProjectsPath(user: User) {
-    return `users/${user.uid!}/projects`
-}
-
-function getUserProjectsCollection(db: Firestore, user: User) {
-    return collection(db, getProjectsPath(user))
 }
 
 export default function Home() {
