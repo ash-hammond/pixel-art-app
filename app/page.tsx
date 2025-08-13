@@ -1,7 +1,7 @@
 'use client'
 import {Property} from "csstype";
 import {useRef, useState} from "react";
-import {Button, Container, Stack, Typography} from "@mui/material";
+import {Button, Container, Snackbar, Stack, Typography} from "@mui/material";
 import {firebaseConfig, getProjectsPath, getUserProjectsCollection} from "@/helpers/database"
 // Import the functions you need from the SDKs you need
 import {FirebaseApp, initializeApp} from "firebase/app";
@@ -46,22 +46,29 @@ export default function Home() {
     if (app.current == null) {
         app.current = initializeApp(firebaseConfig)
     }
+    const [saved, setSaved] = useState(false)
+    const [saving, setSaving] = useState(false)
     const auth = getAuth(app.current);
     const user = auth.currentUser
     const [_, forceUpdate] = useState<boolean>(false)
     const db = getFirestore(app.current)
 
     async function saveProject() {
+        setSaving(true)
         if (projectId) {
-            return await updateDoc(doc(db, getProjectsPath(user!), projectId), {
+            await updateDoc(doc(db, getProjectsPath(user!), projectId), {
+                pixels: pixels,
+                name: projectName
+            })
+        } else {
+
+            await addDoc(getUserProjectsCollection(db, user!), {
                 pixels: pixels,
                 name: projectName
             })
         }
-        return await addDoc(getUserProjectsCollection(db, user!), {
-            pixels: pixels,
-            name: projectName
-        })
+        setSaved(true)
+        setSaving(false)
     }
 
     async function loadProject(id: string) {
@@ -90,18 +97,23 @@ export default function Home() {
     //TODO warn on leave w/out saving
     return (
             <Container sx={{marginTop: 2}}>
+                <Snackbar open={saved} onClose={() => setSaved(false)} message="Saved Project"></Snackbar>
                 <Stack spacing={1}>
                     <TopBar loadProject={loadProject} auth={auth} forceUpdate={forceUpdate} db={db} user={user}/>
                     <Typography>{projectName}</Typography>
                     <Stack direction="row" spacing={1}>
-                        <Button color='success' variant="contained" onClick={async () => {
-                            if (user) {
-                                //TODO add toast
-                                saveProject().catch(alert)
-                            } else {
-                                alert("You must login to save")
-                            }
-                        }}>Save</Button>
+                        {saving ?
+                            <Button color='success' variant="contained" disabled>Saving...</Button>
+                            :
+                            <Button color='success' variant="contained" onClick={async () => {
+                                if (user) {
+                                    //TODO add toast
+                                    saveProject().catch(alert)
+                                } else {
+                                    alert("You must login to save")
+                                }
+                            }}>Save</Button>
+                        }
                         <ChangeProjectNameButton changeName={setProjectName} name={projectName}/>
                         <Button variant="contained" onClick={() => {
                             const a = document.createElement("a")
