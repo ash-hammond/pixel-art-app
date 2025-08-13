@@ -1,8 +1,7 @@
 'use client'
 import {Property} from "csstype";
-import {Dispatch, SetStateAction, useEffect, useRef, useState} from "react";
+import {Dispatch, RefObject, SetStateAction, useEffect, useRef, useState} from "react";
 import assert from "node:assert";
-import clone from "shallow-clone"
 import {Vector2} from "three";
 import {Button} from "@mui/material";
 
@@ -14,8 +13,7 @@ function ColorBlock({color}: {color: Property.BackgroundColor}) {
     return <div style={{backgroundColor: color}} className="h-6 w-6 rounded-2xl"></div>
 }
 
-function PixelCanvas({width, height, scale, picked_color, pixels, setPixels}: {width: number, height: number, scale: number, picked_color: Property.BackgroundColor, pixels: Property.BackgroundColor[], setPixels: Dispatch<SetStateAction<Property.BackgroundColor[]>>}) {
-    const ref = useRef<HTMLCanvasElement>(null);
+function PixelCanvas({width, height, scale, picked_color, pixels, setPixels, ref}: {ref: RefObject<HTMLCanvasElement | null>, width: number, height: number, scale: number, picked_color: Property.BackgroundColor, pixels: Property.BackgroundColor[], setPixels: Dispatch<SetStateAction<Property.BackgroundColor[]>>}) {
     const paint = useRef(false)
     const mouse = useRef<Vector2>(null)
 
@@ -89,13 +87,19 @@ export default function Home() {
     const width = 64
     const height= 64
 
+    const canvasRef = useRef<HTMLCanvasElement>(null);
     const [pixels, setPixels] = useState<Property.BackgroundColor[]>(Array<Property.BackgroundColor>(width * height).fill("red"));
     return (
       <div>
           <ColorBlock color={color}></ColorBlock>
           {palette.map((color, i) => <ColorButton key={i} setColor={setColor} color={color}></ColorButton>)}
-          <PixelCanvas width={width} picked_color={color} height={height} scale={10} pixels={pixels} setPixels={setPixels}></PixelCanvas>
-          <Button>Export</Button>
+          <PixelCanvas ref={canvasRef} width={width} picked_color={color} height={height} scale={10} pixels={pixels} setPixels={setPixels}></PixelCanvas>
+          <Button onClick={() => {
+              const a = document.createElement("a")
+              a.href = canvasRef.current!.toDataURL()
+              a.download = "export.png"
+              a.click()
+          }}>Export</Button>
       </div>
   );
 }
