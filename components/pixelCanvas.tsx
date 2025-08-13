@@ -1,7 +1,6 @@
 import {Dispatch, RefObject, SetStateAction, useEffect, useRef} from "react";
 import {Property} from "csstype";
 import {Vector2} from "three";
-import assert from "node:assert";
 
 export function PixelCanvas({width, height, scale, picked_color, pixels, setPixels, ref}: {
     ref: RefObject<HTMLCanvasElement | null>,
@@ -65,8 +64,7 @@ export function PixelCanvas({width, height, scale, picked_color, pixels, setPixe
     function paintPixel() {
         setPixels(p => {
             const n = p.slice()
-            assert(mouse.current)
-            n[positionToIndex(mouse.current)] = picked_color
+            n[positionToIndex(mouse.current!)] = picked_color
             return n
         })
     }
