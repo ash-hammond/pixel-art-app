@@ -1,7 +1,6 @@
 MVP:
-- User Auth
-- Load/Save
 - Branding
+- GitHub link
 - Visual Polish
 - README.md
 - Vercel deployment
