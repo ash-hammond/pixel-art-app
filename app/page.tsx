@@ -40,11 +40,11 @@ function ColorButton({setColor, color}: {
     color: Property.BackgroundColor
 }) {
     return <button onClick={() => setColor(color)} style={{backgroundColor: color}}
-                   className="h-6 w-6 rounded-2xl cursor-pointer"></button>
+                   className="h-6 w-6 border rounded-2xl cursor-pointer"></button>
 }
 
 function ColorBlock({color}: { color: Property.BackgroundColor }) {
-    return <div style={{backgroundColor: color}} className="h-6 w-6 rounded-2xl"></div>
+    return <div style={{backgroundColor: color}} className="border h-6 w-6 rounded-2xl"></div>
 }
 
 function TopBar({user, auth, db, forceUpdate, loadProject}: {loadProject: (id: string) => void, db: Firestore, user: User | null, auth: Auth, forceUpdate: Dispatch<SetStateAction<boolean>>}) {
