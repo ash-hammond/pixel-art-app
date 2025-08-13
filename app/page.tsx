@@ -3,17 +3,13 @@ import {Property} from "csstype";
 import {Dispatch, RefObject, SetStateAction, useEffect, useRef, useState} from "react";
 import assert from "node:assert";
 import {Vector2} from "three";
-import {AppBar, Button, Container, List, ListItemButton, Modal, Toolbar} from "@mui/material";
+import {Button, Container, List, ListItemButton, Modal, TextField} from "@mui/material";
 
 // Import the functions you need from the SDKs you need
 import {FirebaseApp, initializeApp} from "firebase/app";
-import {getAnalytics} from "firebase/analytics";
-import {Auth, getAuth, GithubAuthProvider, signInWithPopup, signInWithRedirect, signOut, User} from "@firebase/auth";
+import {Auth, getAuth, GithubAuthProvider, signInWithPopup, signOut, User} from "@firebase/auth";
 import {Box} from "@mui/system";
-import {addDoc, collection, doc, getDoc, getDocs, getFirestore, updateDoc} from "@firebase/firestore";
-import {setDoc} from "@firebase/firestore/lite";
-import firebase from "firebase/compat";
-import Firestore = firebase.firestore.Firestore;
+import {addDoc, Firestore, collection, doc, getDoc, getDocs, getFirestore, updateDoc} from "@firebase/firestore";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -65,7 +61,7 @@ function PixelCanvas({width, height, scale, picked_color, pixels, setPixels, ref
             const y = Math.floor(i / width)
             fillPixel(i - y * width, y, pixel)
         })
-    }, [pixels, height, scale, width])
+    }, [ref, pixels, height, scale, width])
 
     function positionToIndex(position: Vector2) {
         return position.y * width + position.x
@@ -135,7 +131,7 @@ function TopBar({user, auth, db, forceUpdate, loadProject}: {loadProject: (id: s
     }
     const [projects, setProjects] = useState<Project[] | null>(null)
     if (user) {
-        return <><Button onClick={async () => {
+        return <Box><Button onClick={async () => {
             await signOut(auth)
             forceUpdate((n) => !n)
         }}>Logout</Button>
@@ -158,7 +154,7 @@ function TopBar({user, auth, db, forceUpdate, loadProject}: {loadProject: (id: s
                     <ListItemButton>Test</ListItemButton>
                 </List>
             </Modal>
-        </>
+        </Box>
     }
         return <Button onClick={async () => {
              await signInWithPopup(auth, new GithubAuthProvider())
@@ -166,12 +162,12 @@ function TopBar({user, auth, db, forceUpdate, loadProject}: {loadProject: (id: s
         }}>Login with GitHub</Button>
 }
 
-function getProjectsPath(db: Firestore, user: User) {
+function getProjectsPath(user: User) {
     return `users/${user.uid!}/projects`
 }
 
 function getUserProjectsCollection(db: Firestore, user: User) {
-    return collection(db, getProjectsPath(db, user))
+    return collection(db, getProjectsPath(user))
 }
 
 export default function Home() {
@@ -182,7 +178,7 @@ export default function Home() {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [pixels, setPixels] = useState<Property.BackgroundColor[]>(Array<Property.BackgroundColor>(width * height).fill("red"));
-    const [projectId, setProjectId] = useState<string>(null)
+    const [projectId, setProjectId] = useState<string | null>(null)
     const [projectName, setProjectName] = useState("New Project")
     const app = useRef<FirebaseApp>(null)
     if (app.current == null) {
@@ -195,7 +191,7 @@ export default function Home() {
 
     async function saveProject() {
         if (projectId) {
-            return await updateDoc(doc(db, getProjectsPath(db, user!), projectId), {
+            return await updateDoc(doc(db, getProjectsPath(user!), projectId), {
                 pixels: pixels,
                 name: projectName
             })
@@ -207,7 +203,7 @@ export default function Home() {
     }
 
     async function loadProject(id: string) {
-        const p = await getDoc(doc(db, getProjectsPath(db, user!), id))
+        const p = await getDoc(doc(db, getProjectsPath(user!), id))
         setPixels(p.data()!.pixels)
         setProjectId(id)
     }
@@ -216,7 +212,7 @@ export default function Home() {
         <Box>
             <Container>
                 <TopBar loadProject={loadProject} auth={auth} forceUpdate={forceUpdate} db={db} user={user}/>
-                <div>{projectName}</div>
+                <TextField variant="standard" color="primary" defaultValue={projectName} onChange={(e) => setProjectName(e.target.value)}></TextField>
                 <ColorBlock color={color}></ColorBlock>
                 {palette.map((color, i) => <ColorButton key={i} setColor={setColor} color={color}></ColorButton>)}
                 <PixelCanvas ref={canvasRef} width={width} picked_color={color} height={height} scale={10}
