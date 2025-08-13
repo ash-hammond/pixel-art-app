@@ -10,7 +10,7 @@ import {FirebaseApp, initializeApp} from "firebase/app";
 import {getAnalytics} from "firebase/analytics";
 import {Auth, getAuth, GithubAuthProvider, signInWithPopup, signInWithRedirect, signOut, User} from "@firebase/auth";
 import {Box} from "@mui/system";
-import {addDoc, collection, doc, getDoc, getDocs, getFirestore} from "@firebase/firestore";
+import {addDoc, collection, doc, getDoc, getDocs, getFirestore, updateDoc} from "@firebase/firestore";
 import {setDoc} from "@firebase/firestore/lite";
 import firebase from "firebase/compat";
 import Firestore = firebase.firestore.Firestore;
@@ -194,6 +194,12 @@ export default function Home() {
     const db = getFirestore(app.current)
 
     async function saveProject() {
+        if (projectId) {
+            return await updateDoc(doc(db, getProjectsPath(db, user!), projectId), {
+                pixels: pixels,
+                name: projectName
+            })
+        }
         return await addDoc(getUserProjectsCollection(db, user!), {
             pixels: pixels,
             name: projectName
@@ -202,7 +208,7 @@ export default function Home() {
 
     async function loadProject(id: string) {
         const p = await getDoc(doc(db, getProjectsPath(db, user!), id))
-        setPixels(p.data().pixels)
+        setPixels(p.data()!.pixels)
         setProjectId(id)
     }
 
