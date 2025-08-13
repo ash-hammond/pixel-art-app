@@ -1,14 +1,25 @@
 'use client'
 import {Property} from "csstype";
 import {Dispatch, SetStateAction, useRef, useState} from "react";
-import {Stack, Button, Container, List, ListItemButton, Modal, TextField, Typography} from "@mui/material";
+import {Button, Container, List, ListItemButton, Modal, Stack, Typography} from "@mui/material";
 
 // Import the functions you need from the SDKs you need
 import {FirebaseApp, initializeApp} from "firebase/app";
 import {Auth, getAuth, GithubAuthProvider, signInWithPopup, signOut, User} from "@firebase/auth";
 import {Box} from "@mui/system";
-import {addDoc, collection, doc, Firestore, getDoc, getDocs, getFirestore, updateDoc} from "@firebase/firestore";
+import {
+    addDoc,
+    collection,
+    deleteDoc,
+    doc,
+    Firestore,
+    getDoc,
+    getDocs,
+    getFirestore,
+    updateDoc
+} from "@firebase/firestore";
 import {PixelCanvas} from "@/components/pixelCanvas";
+import {DeleteProjectButton} from "@/components/deleteProjectButton";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -84,14 +95,15 @@ function getUserProjectsCollection(db: Firestore, user: User) {
 
 export default function Home() {
     const palette: Property.BackgroundColor[] = ["red", "blue", "green", "yellow", "orange", "purple", "pink", "brown", "grey", "black", "white"];
-    const [color, setColor] = useState<Property.BackgroundColor>("red");
+    const [color, setColor] = useState<Property.BackgroundColor>("black");
     const width = 64
     const height = 64
-
+    const DEFAULT_BACKGROUND = 'white'
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [pixels, setPixels] = useState<Property.BackgroundColor[]>(Array<Property.BackgroundColor>(width * height).fill("red"));
+    const [pixels, setPixels] = useState<Property.BackgroundColor[]>(Array<Property.BackgroundColor>(width * height).fill(DEFAULT_BACKGROUND));
     const [projectId, setProjectId] = useState<string | null>(null)
-    const [projectName, setProjectName] = useState("New Project")
+    const DEFAULT_PROJECT_NAME = "New Project"
+    const [projectName, setProjectName] = useState(DEFAULT_PROJECT_NAME);
     const app = useRef<FirebaseApp>(null)
     if (app.current == null) {
         app.current = initializeApp(firebaseConfig)
@@ -122,6 +134,21 @@ export default function Home() {
         setProjectId(id)
     }
 
+    function clearPixels(color: string) {
+        const p = new Array(pixels.length)
+        p.fill(color)
+        setPixels(p)
+    }
+
+    async function deleteProject() {
+        clearPixels(DEFAULT_BACKGROUND)
+        if (projectId != null) {
+            await deleteDoc(doc(db, getProjectsPath(user!), projectId))
+            setProjectId(null)
+        }
+        setProjectName(DEFAULT_PROJECT_NAME)
+    }
+
     return (
         <Box>
             <Container>
@@ -130,7 +157,7 @@ export default function Home() {
                     <Typography>{projectName}</Typography>
                     <Stack direction="row" spacing={2}>
                         <Button variant="contained">Change Name</Button>
-                        <Button variant="contained" color="error">Delete</Button>
+                        <DeleteProjectButton deleteProject={deleteProject}/>
                     </Stack>
                         <ColorBlock color={color}></ColorBlock>
                         <Stack direction="row" spacing={1}>
