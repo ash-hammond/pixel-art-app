@@ -88,7 +88,6 @@ export default function Home() {
     }
 
     return (
-        <Box>
             <Container>
                 <Stack spacing={1}>
                     <TopBar loadProject={loadProject} auth={auth} forceUpdate={forceUpdate} db={db} user={user}/>
@@ -123,6 +122,5 @@ export default function Home() {
                     </Box>
                 </Stack>
             </Container>
-        </Box>
     );
 }
