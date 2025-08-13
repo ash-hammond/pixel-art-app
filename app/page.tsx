@@ -95,6 +95,7 @@ export default function Home() {
                     <Stack direction="row" spacing={1}>
                         <Button color='success' variant="contained" onClick={async () => {
                             if (user) {
+                                //TODO add toast
                                 saveProject().catch(alert)
                             } else {
                                 alert("You must login to save")
