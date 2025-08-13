@@ -5,6 +5,28 @@ import assert from "node:assert";
 import {Vector2} from "three";
 import {Button} from "@mui/material";
 
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+    apiKey: "AIzaSyBoSsmVIbFOFUxIT694874IJBRrLtKgG7I",
+    authDomain: "pixel-painter-eb21f.firebaseapp.com",
+    projectId: "pixel-painter-eb21f",
+    storageBucket: "pixel-painter-eb21f.firebasestorage.app",
+    messagingSenderId: "292877217298",
+    appId: "1:292877217298:web:79fd9e6eccbb052ee872cb",
+    measurementId: "G-P77XPN2ZJY"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
 function ColorButton({setColor, color}: {setColor: (color: Property.BackgroundColor) => void, color: Property.BackgroundColor}) {
     return <button onClick={() => setColor(color)} style={{backgroundColor: color}} className="h-6 w-6 rounded-2xl cursor-pointer"></button>
 }
