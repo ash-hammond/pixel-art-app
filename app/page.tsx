@@ -3,11 +3,13 @@ import {Property} from "csstype";
 import {Dispatch, RefObject, SetStateAction, useEffect, useRef, useState} from "react";
 import assert from "node:assert";
 import {Vector2} from "three";
-import {Button} from "@mui/material";
+import {AppBar, Button, Container, Toolbar} from "@mui/material";
 
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
+import {getAuth, GithubAuthProvider, signInWithPopup, signInWithRedirect} from "@firebase/auth";
+import {Box} from "@mui/system";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -22,10 +24,6 @@ const firebaseConfig = {
     appId: "1:292877217298:web:79fd9e6eccbb052ee872cb",
     measurementId: "G-P77XPN2ZJY"
 };
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
 
 function ColorButton({setColor, color}: {setColor: (color: Property.BackgroundColor) => void, color: Property.BackgroundColor}) {
     return <button onClick={() => setColor(color)} style={{backgroundColor: color}} className="h-6 w-6 rounded-2xl cursor-pointer"></button>
@@ -111,17 +109,27 @@ export default function Home() {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [pixels, setPixels] = useState<Property.BackgroundColor[]>(Array<Property.BackgroundColor>(width * height).fill("red"));
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth(app)
+    const provider = new GithubAuthProvider();
+
     return (
-      <div>
-          <ColorBlock color={color}></ColorBlock>
-          {palette.map((color, i) => <ColorButton key={i} setColor={setColor} color={color}></ColorButton>)}
-          <PixelCanvas ref={canvasRef} width={width} picked_color={color} height={height} scale={10} pixels={pixels} setPixels={setPixels}></PixelCanvas>
-          <Button onClick={() => {
-              const a = document.createElement("a")
-              a.href = canvasRef.current!.toDataURL()
-              a.download = "export.png"
-              a.click()
-          }}>Export</Button>
-      </div>
+      <Box>
+          <Button color="inherit" onClick={async () => {
+              const resp = await signInWithPopup(auth, provider)
+          }}>Login</Button>
+          <Container>
+              <ColorBlock color={color}></ColorBlock>
+              {palette.map((color, i) => <ColorButton key={i} setColor={setColor} color={color}></ColorButton>)}
+              <PixelCanvas ref={canvasRef} width={width} picked_color={color} height={height} scale={10} pixels={pixels} setPixels={setPixels}></PixelCanvas>
+              <Button onClick={() => {
+                  const a = document.createElement("a")
+                  a.href = canvasRef.current!.toDataURL()
+                  a.download = "export.png"
+                  a.click()
+              }}>Export</Button>
+          </Container>
+      </Box>
   );
 }
