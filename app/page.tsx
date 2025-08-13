@@ -87,8 +87,9 @@ export default function Home() {
         setProjectName(DEFAULT_PROJECT_NAME)
     }
 
+    //TODO warn on leave w/out saving
     return (
-            <Container>
+            <Container sx={{marginTop: 2}}>
                 <Stack spacing={1}>
                     <TopBar loadProject={loadProject} auth={auth} forceUpdate={forceUpdate} db={db} user={user}/>
                     <Typography>{projectName}</Typography>
