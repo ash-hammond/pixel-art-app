@@ -93,8 +93,21 @@ export default function Home() {
                 <Stack spacing={1}>
                     <TopBar loadProject={loadProject} auth={auth} forceUpdate={forceUpdate} db={db} user={user}/>
                     <Typography>{projectName}</Typography>
-                    <Stack direction="row" spacing={2}>
+                    <Stack direction="row" spacing={1}>
+                        <Button color='success' variant="contained" onClick={async () => {
+                            if (user) {
+                                saveProject().catch(alert)
+                            } else {
+                                alert("You must login to save")
+                            }
+                        }}>Save</Button>
                         <ChangeProjectNameButton changeName={setProjectName} name={projectName}/>
+                        <Button variant="contained" onClick={() => {
+                            const a = document.createElement("a")
+                            a.href = canvasRef.current!.toDataURL()
+                            a.download = "export.png"
+                            a.click()
+                        }}>Export</Button>
                         <DeleteProjectButton deleteProject={deleteProject}/>
                     </Stack>
                     <Stack direction="row" spacing={1}>
@@ -108,21 +121,6 @@ export default function Home() {
                         <PixelCanvas ref={canvasRef} width={width} picked_color={color} height={height} scale={10}
                                      pixels={pixels} setPixels={setPixels}></PixelCanvas>
                     </Box>
-                    <Stack direction="row" spacing={2}>
-                        <Button variant="contained" onClick={() => {
-                            const a = document.createElement("a")
-                            a.href = canvasRef.current!.toDataURL()
-                            a.download = "export.png"
-                            a.click()
-                        }}>Export</Button>
-                        <Button color='success' variant="contained" onClick={async () => {
-                            if (user) {
-                                saveProject().catch(alert)
-                            } else {
-                                alert("You must login to save")
-                            }
-                        }}>Save</Button>
-                    </Stack>
                 </Stack>
             </Container>
         </Box>
