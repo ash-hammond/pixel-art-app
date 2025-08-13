@@ -1,7 +1,7 @@
 'use client'
 import {Property} from "csstype";
 import {Dispatch, SetStateAction, useRef, useState} from "react";
-import {Button, Container, List, ListItemButton, Modal, TextField} from "@mui/material";
+import {Stack, Button, Container, List, ListItemButton, Modal, TextField, Typography} from "@mui/material";
 
 // Import the functions you need from the SDKs you need
 import {FirebaseApp, initializeApp} from "firebase/app";
@@ -116,32 +116,46 @@ export default function Home() {
 
     async function loadProject(id: string) {
         const p = await getDoc(doc(db, getProjectsPath(user!), id))
-        setPixels(p.data()!.pixels)
+        const data = p.data()!
+        setPixels(data.pixels)
+        setProjectName(data.name)
         setProjectId(id)
     }
 
     return (
         <Box>
             <Container>
-                <TopBar loadProject={loadProject} auth={auth} forceUpdate={forceUpdate} db={db} user={user}/>
-                <TextField variant="standard" color="primary" defaultValue={projectName} onChange={(e) => setProjectName(e.target.value)}></TextField>
-                <ColorBlock color={color}></ColorBlock>
-                {palette.map((color, i) => <ColorButton key={i} setColor={setColor} color={color}></ColorButton>)}
-                <PixelCanvas ref={canvasRef} width={width} picked_color={color} height={height} scale={10}
-                             pixels={pixels} setPixels={setPixels}></PixelCanvas>
-                <Button onClick={() => {
-                    const a = document.createElement("a")
-                    a.href = canvasRef.current!.toDataURL()
-                    a.download = "export.png"
-                    a.click()
-                }}>Export</Button>
-                <Button onClick={async () => {
-                    if (user) {
-                        saveProject().catch(alert)
-                    } else {
-                        alert("You must login to save")
-                    }
-                }}>Save</Button>
+                <Stack spacing={1}>
+                    <TopBar loadProject={loadProject} auth={auth} forceUpdate={forceUpdate} db={db} user={user}/>
+                    <Typography>{projectName}</Typography>
+                    <Stack direction="row" spacing={2}>
+                        <Button variant="contained">Change Name</Button>
+                        <Button variant="contained" color="error">Delete</Button>
+                    </Stack>
+                        <ColorBlock color={color}></ColorBlock>
+                        <Stack direction="row" spacing={1}>
+                            {palette.map((color, i) => <ColorButton key={i} setColor={setColor} color={color}></ColorButton>)}
+                        </Stack>
+                    <Box>
+                        <PixelCanvas ref={canvasRef} width={width} picked_color={color} height={height} scale={10}
+                                     pixels={pixels} setPixels={setPixels}></PixelCanvas>
+                    </Box>
+                    <Stack direction="row" spacing={2}>
+                        <Button variant="contained" onClick={() => {
+                            const a = document.createElement("a")
+                            a.href = canvasRef.current!.toDataURL()
+                            a.download = "export.png"
+                            a.click()
+                        }}>Export</Button>
+                        <Button color='success' variant="contained" onClick={async () => {
+                            if (user) {
+                                saveProject().catch(alert)
+                            } else {
+                                alert("You must login to save")
+                            }
+                        }}>Save</Button>
+                    </Stack>
+                </Stack>
             </Container>
         </Box>
     );
