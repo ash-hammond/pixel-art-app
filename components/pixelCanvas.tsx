@@ -71,7 +71,7 @@ export function PixelCanvas({width, height, scale, picked_color, pixels, setPixe
         })
     }
 
-    return <canvas ref={ref} width={width * scale} height={height * scale} onClick={paintPixel}
+    return <canvas className="border" ref={ref} width={width * scale} height={height * scale} onClick={paintPixel}
                    onMouseMove={(event) => {
                        const rect = ref.current!.getBoundingClientRect()
                        const pixel = new Vector2(Math.floor((event.clientX - rect.x) / scale), Math.floor((event.clientY - rect.y) / scale))
