@@ -6,9 +6,9 @@ import {Vector2} from "three";
 import {AppBar, Button, Container, Toolbar} from "@mui/material";
 
 // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import {getAuth, GithubAuthProvider, signInWithPopup, signInWithRedirect} from "@firebase/auth";
+import {initializeApp} from "firebase/app";
+import {getAnalytics} from "firebase/analytics";
+import {getAuth, GithubAuthProvider, signInWithPopup, signInWithRedirect, signOut, User} from "@firebase/auth";
 import {Box} from "@mui/system";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -25,24 +25,38 @@ const firebaseConfig = {
     measurementId: "G-P77XPN2ZJY"
 };
 
-function ColorButton({setColor, color}: {setColor: (color: Property.BackgroundColor) => void, color: Property.BackgroundColor}) {
-    return <button onClick={() => setColor(color)} style={{backgroundColor: color}} className="h-6 w-6 rounded-2xl cursor-pointer"></button>
+function ColorButton({setColor, color}: {
+    setColor: (color: Property.BackgroundColor) => void,
+    color: Property.BackgroundColor
+}) {
+    return <button onClick={() => setColor(color)} style={{backgroundColor: color}}
+                   className="h-6 w-6 rounded-2xl cursor-pointer"></button>
 }
 
-function ColorBlock({color}: {color: Property.BackgroundColor}) {
+function ColorBlock({color}: { color: Property.BackgroundColor }) {
     return <div style={{backgroundColor: color}} className="h-6 w-6 rounded-2xl"></div>
 }
 
-function PixelCanvas({width, height, scale, picked_color, pixels, setPixels, ref}: {ref: RefObject<HTMLCanvasElement | null>, width: number, height: number, scale: number, picked_color: Property.BackgroundColor, pixels: Property.BackgroundColor[], setPixels: Dispatch<SetStateAction<Property.BackgroundColor[]>>}) {
+function PixelCanvas({width, height, scale, picked_color, pixels, setPixels, ref}: {
+    ref: RefObject<HTMLCanvasElement | null>,
+    width: number,
+    height: number,
+    scale: number,
+    picked_color: Property.BackgroundColor,
+    pixels: Property.BackgroundColor[],
+    setPixels: Dispatch<SetStateAction<Property.BackgroundColor[]>>
+}) {
     const paint = useRef(false)
     const mouse = useRef<Vector2>(null)
 
     useEffect(() => {
         const ctx = ref.current!.getContext("2d")!
+
         function fillPixel(x: number, y: number, color: string) {
             ctx.fillStyle = color
             ctx.fillRect(x * scale, y * scale, scale, scale);
         }
+
         pixels.forEach((pixel, i) => {
             const y = Math.floor(i / width)
             fillPixel(i - y * width, y, pixel)
@@ -68,8 +82,14 @@ function PixelCanvas({width, height, scale, picked_color, pixels, setPixels, ref
                 n[positionToIndex(position)] = picked_color
                 if (position.equals(to)) break
                 const e2 = 2 * err
-                if (e2 > -dy) { err -= dy; position.x += sx; }
-                if (e2 <  dx) { err += dx; position.y += sy; }
+                if (e2 > -dy) {
+                    err -= dy;
+                    position.x += sx;
+                }
+                if (e2 < dx) {
+                    err += dx;
+                    position.y += sy;
+                }
             }
 
             return n
@@ -84,52 +104,60 @@ function PixelCanvas({width, height, scale, picked_color, pixels, setPixels, ref
             return n
         })
     }
-    return <canvas ref={ref} width={width * scale} height={height * scale} onClick={paintPixel} onMouseMove={(event) => {
-        const rect = ref.current!.getBoundingClientRect()
-        const pixel = new Vector2(Math.floor((event.clientX - rect.x) / scale), Math.floor((event.clientY - rect.y) / scale))
-        if (paint.current) {
-            if (mouse.current) {
-                drawLine(pixel, mouse.current)
-                mouse.current = pixel
-            }
-            else {
-                mouse.current = pixel
-                paintPixel()
-            }
-        }
-        else mouse.current = pixel
-    }} onMouseLeave={() => {mouse.current = null; paint.current = false}} onMouseDown={() => paint.current = true} onMouseUp={() => paint.current = false}></canvas>
+
+    return <canvas ref={ref} width={width * scale} height={height * scale} onClick={paintPixel}
+                   onMouseMove={(event) => {
+                       const rect = ref.current!.getBoundingClientRect()
+                       const pixel = new Vector2(Math.floor((event.clientX - rect.x) / scale), Math.floor((event.clientY - rect.y) / scale))
+                       if (paint.current) {
+                           if (mouse.current) {
+                               drawLine(pixel, mouse.current)
+                               mouse.current = pixel
+                           } else {
+                               mouse.current = pixel
+                               paintPixel()
+                           }
+                       } else mouse.current = pixel
+                   }} onMouseLeave={() => {
+        mouse.current = null;
+        paint.current = false
+    }} onMouseDown={() => paint.current = true} onMouseUp={() => paint.current = false}></canvas>
 }
 
 export default function Home() {
     const palette: Property.BackgroundColor[] = ["red", "blue", "green", "yellow", "orange", "purple", "pink", "brown", "grey", "black", "white"];
     const [color, setColor] = useState<Property.BackgroundColor>("red");
     const width = 64
-    const height= 64
+    const height = 64
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [pixels, setPixels] = useState<Property.BackgroundColor[]>(Array<Property.BackgroundColor>(width * height).fill("red"));
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const auth = getAuth(app)
-    const provider = new GithubAuthProvider();
+    const auth = useRef(getAuth(app))
+    const [_, forceUpdate] = useState<boolean>(false)
 
     return (
-      <Box>
-          <Button color="inherit" onClick={async () => {
-              const resp = await signInWithPopup(auth, provider)
-          }}>Login</Button>
-          <Container>
-              <ColorBlock color={color}></ColorBlock>
-              {palette.map((color, i) => <ColorButton key={i} setColor={setColor} color={color}></ColorButton>)}
-              <PixelCanvas ref={canvasRef} width={width} picked_color={color} height={height} scale={10} pixels={pixels} setPixels={setPixels}></PixelCanvas>
-              <Button onClick={() => {
-                  const a = document.createElement("a")
-                  a.href = canvasRef.current!.toDataURL()
-                  a.download = "export.png"
-                  a.click()
-              }}>Export</Button>
-          </Container>
-      </Box>
-  );
+        <Box>
+            {auth.current.currentUser != null ? <Button onClick={async () => {
+                    await signOut(auth.current)
+                    forceUpdate((n) => !n)
+                }}>Logout</Button> :
+                <Button onClick={async () => {
+                    const result = await signInWithPopup(auth.current, new GithubAuthProvider())
+                    forceUpdate((n) => !n)
+                }}>Login with GitHub</Button>}
+            <Container>
+                <ColorBlock color={color}></ColorBlock>
+                {palette.map((color, i) => <ColorButton key={i} setColor={setColor} color={color}></ColorButton>)}
+                <PixelCanvas ref={canvasRef} width={width} picked_color={color} height={height} scale={10}
+                             pixels={pixels} setPixels={setPixels}></PixelCanvas>
+                <Button onClick={() => {
+                    const a = document.createElement("a")
+                    a.href = canvasRef.current!.toDataURL()
+                    a.download = "export.png"
+                    a.click()
+                }}>Export</Button>
+            </Container>
+        </Box>
+    );
 }
