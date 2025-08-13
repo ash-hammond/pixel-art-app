@@ -4,6 +4,7 @@ import {Dispatch, SetStateAction, useEffect, useRef, useState} from "react";
 import assert from "node:assert";
 import clone from "shallow-clone"
 import {Vector2} from "three";
+import {Button} from "@mui/material";
 
 function ColorButton({setColor, color}: {setColor: (color: Property.BackgroundColor) => void, color: Property.BackgroundColor}) {
     return <button onClick={() => setColor(color)} style={{backgroundColor: color}} className="h-6 w-6 rounded-2xl cursor-pointer"></button>
@@ -94,6 +95,7 @@ export default function Home() {
           <ColorBlock color={color}></ColorBlock>
           {palette.map((color, i) => <ColorButton key={i} setColor={setColor} color={color}></ColorButton>)}
           <PixelCanvas width={width} picked_color={color} height={height} scale={10} pixels={pixels} setPixels={setPixels}></PixelCanvas>
+          <Button>Export</Button>
       </div>
   );
 }
