@@ -3,14 +3,14 @@ import {Property} from "csstype";
 import {Dispatch, RefObject, SetStateAction, useEffect, useRef, useState} from "react";
 import assert from "node:assert";
 import {Vector2} from "three";
-import {AppBar, Button, Container, Toolbar} from "@mui/material";
+import {AppBar, Button, Container, List, ListItemButton, Modal, Toolbar} from "@mui/material";
 
 // Import the functions you need from the SDKs you need
 import {FirebaseApp, initializeApp} from "firebase/app";
 import {getAnalytics} from "firebase/analytics";
 import {Auth, getAuth, GithubAuthProvider, signInWithPopup, signInWithRedirect, signOut, User} from "@firebase/auth";
 import {Box} from "@mui/system";
-import {addDoc, collection, doc, getDocs, getFirestore} from "@firebase/firestore";
+import {addDoc, collection, doc, getDoc, getDocs, getFirestore} from "@firebase/firestore";
 import {setDoc} from "@firebase/firestore/lite";
 import firebase from "firebase/compat";
 import Firestore = firebase.firestore.Firestore;
@@ -128,16 +128,36 @@ function PixelCanvas({width, height, scale, picked_color, pixels, setPixels, ref
     }} onMouseDown={() => paint.current = true} onMouseUp={() => paint.current = false}></canvas>
 }
 
-function TopBar({user, auth, db, forceUpdate}: {db: Firestore, user: User | null, auth: Auth, forceUpdate: Dispatch<SetStateAction<boolean>>}) {
+function TopBar({user, auth, db, forceUpdate, loadProject}: {loadProject: (id: string) => void, db: Firestore, user: User | null, auth: Auth, forceUpdate: Dispatch<SetStateAction<boolean>>}) {
+    interface Project {
+        name: string,
+        id: string,
+    }
+    const [projects, setProjects] = useState<Project[] | null>(null)
     if (user) {
         return <><Button onClick={async () => {
             await signOut(auth)
             forceUpdate((n) => !n)
         }}>Logout</Button>
-            <Button onClick={() => {
-                const snapshot = getDocs(getUserProjectsCollection(db, user))
-
+            <Button onClick={async () => {
+                const snapshot = await getDocs(getUserProjectsCollection(db, user))
+                setProjects(snapshot.docs.map((doc) => {
+                    return {
+                        name: doc.get("name"),
+                        id: doc.id,
+                    }
+                }))
             }}>Open</Button>
+            <Modal open={Boolean(projects)}>
+                <List>
+                    {projects?.map((project: Project, id) => <ListItemButton key={id} onClick={() => {
+                        setProjects(null)
+                        loadProject(project.id)
+                    }
+                    }>{project.name}</ListItemButton>)}
+                    <ListItemButton>Test</ListItemButton>
+                </List>
+            </Modal>
         </>
     }
         return <Button onClick={async () => {
@@ -146,8 +166,12 @@ function TopBar({user, auth, db, forceUpdate}: {db: Firestore, user: User | null
         }}>Login with GitHub</Button>
 }
 
+function getProjectsPath(db: Firestore, user: User) {
+    return `users/${user.uid!}/projects`
+}
+
 function getUserProjectsCollection(db: Firestore, user: User) {
-    return collection(db, `users/${user.uid!}/projects/`)
+    return collection(db, getProjectsPath(db, user))
 }
 
 export default function Home() {
@@ -158,6 +182,7 @@ export default function Home() {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [pixels, setPixels] = useState<Property.BackgroundColor[]>(Array<Property.BackgroundColor>(width * height).fill("red"));
+    const [projectId, setProjectId] = useState<string>(null)
     const [projectName, setProjectName] = useState("New Project")
     const app = useRef<FirebaseApp>(null)
     if (app.current == null) {
@@ -169,17 +194,22 @@ export default function Home() {
     const db = getFirestore(app.current)
 
     async function saveProject() {
-        assert(user)
-        return await addDoc(getUserProjectsCollection(db, user), {
+        return await addDoc(getUserProjectsCollection(db, user!), {
             pixels: pixels,
             name: projectName
         })
     }
 
+    async function loadProject(id: string) {
+        const p = await getDoc(doc(db, getProjectsPath(db, user!), id))
+        setPixels(p.data().pixels)
+        setProjectId(id)
+    }
+
     return (
         <Box>
             <Container>
-                <TopBar auth={auth} forceUpdate={forceUpdate} db={db} user={user}/>
+                <TopBar loadProject={loadProject} auth={auth} forceUpdate={forceUpdate} db={db} user={user}/>
                 <div>{projectName}</div>
                 <ColorBlock color={color}></ColorBlock>
                 {palette.map((color, i) => <ColorButton key={i} setColor={setColor} color={color}></ColorButton>)}
