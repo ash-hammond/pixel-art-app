@@ -97,7 +97,10 @@ export default function Home() {
                         <ChangeProjectNameButton changeName={setProjectName} name={projectName}/>
                         <DeleteProjectButton deleteProject={deleteProject}/>
                     </Stack>
+                    <Stack direction="row" spacing={1}>
+                        <Typography>Selected:</Typography>
                         <ColorBlock color={color}></ColorBlock>
+                    </Stack>
                         <Stack direction="row" spacing={1}>
                             {palette.map((color, i) => <ColorButton key={i} setColor={setColor} color={color}></ColorButton>)}
                         </Stack>
