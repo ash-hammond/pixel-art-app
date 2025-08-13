@@ -20,6 +20,7 @@ import {
 } from "@firebase/firestore";
 import {PixelCanvas} from "@/components/pixelCanvas";
 import {DeleteProjectButton} from "@/components/deleteProjectButton";
+import {ChangeProjectNameButton} from "@/components/changeProjectNameButton";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -156,7 +157,7 @@ export default function Home() {
                     <TopBar loadProject={loadProject} auth={auth} forceUpdate={forceUpdate} db={db} user={user}/>
                     <Typography>{projectName}</Typography>
                     <Stack direction="row" spacing={2}>
-                        <Button variant="contained">Change Name</Button>
+                        <ChangeProjectNameButton changeName={setProjectName} name={projectName}/>
                         <DeleteProjectButton deleteProject={deleteProject}/>
                     </Stack>
                         <ColorBlock color={color}></ColorBlock>
