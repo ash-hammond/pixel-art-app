@@ -1,12 +1,14 @@
 MVP:
-- README.md
 - User Auth
-- Export
 - Load/Save
 - Branding
 - Visual Polish
+- README.md
+- Vercel deployment
+- GitHub CI
 
 Back Burner:
+- Export in different resolutions
 - SFX
 - Draw line between pixels when drag painting
 - Resize canvas
