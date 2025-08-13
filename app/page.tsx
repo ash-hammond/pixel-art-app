@@ -6,12 +6,14 @@ import {Vector2} from "three";
 import {AppBar, Button, Container, Toolbar} from "@mui/material";
 
 // Import the functions you need from the SDKs you need
-import {initializeApp} from "firebase/app";
+import {FirebaseApp, initializeApp} from "firebase/app";
 import {getAnalytics} from "firebase/analytics";
-import {getAuth, GithubAuthProvider, signInWithPopup, signInWithRedirect, signOut, User} from "@firebase/auth";
+import {Auth, getAuth, GithubAuthProvider, signInWithPopup, signInWithRedirect, signOut, User} from "@firebase/auth";
 import {Box} from "@mui/system";
-import {addDoc, collection, doc, getFirestore} from "@firebase/firestore";
+import {addDoc, collection, doc, getDocs, getFirestore} from "@firebase/firestore";
 import {setDoc} from "@firebase/firestore/lite";
+import firebase from "firebase/compat";
+import Firestore = firebase.firestore.Firestore;
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -126,6 +128,28 @@ function PixelCanvas({width, height, scale, picked_color, pixels, setPixels, ref
     }} onMouseDown={() => paint.current = true} onMouseUp={() => paint.current = false}></canvas>
 }
 
+function TopBar({user, auth, db, forceUpdate}: {db: Firestore, user: User | null, auth: Auth, forceUpdate: Dispatch<SetStateAction<boolean>>}) {
+    if (user) {
+        return <><Button onClick={async () => {
+            await signOut(auth)
+            forceUpdate((n) => !n)
+        }}>Logout</Button>
+            <Button onClick={() => {
+                const snapshot = getDocs(getUserProjectsCollection(db, user))
+
+            }}>Open</Button>
+        </>
+    }
+        return <Button onClick={async () => {
+             await signInWithPopup(auth, new GithubAuthProvider())
+            forceUpdate((n) => !n)
+        }}>Login with GitHub</Button>
+}
+
+function getUserProjectsCollection(db: Firestore, user: User) {
+    return collection(db, `users/${user.uid!}/projects/`)
+}
+
 export default function Home() {
     const palette: Property.BackgroundColor[] = ["red", "blue", "green", "yellow", "orange", "purple", "pink", "brown", "grey", "black", "white"];
     const [color, setColor] = useState<Property.BackgroundColor>("red");
@@ -135,15 +159,18 @@ export default function Home() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [pixels, setPixels] = useState<Property.BackgroundColor[]>(Array<Property.BackgroundColor>(width * height).fill("red"));
     const [projectName, setProjectName] = useState("New Project")
-    const app = useRef(initializeApp(firebaseConfig)).current;
-    const auth = useRef(getAuth(app)).current;
+    const app = useRef<FirebaseApp>(null)
+    if (app.current == null) {
+        app.current = initializeApp(firebaseConfig)
+    }
+    const auth = getAuth(app.current);
     const user = auth.currentUser
     const [_, forceUpdate] = useState<boolean>(false)
-    const db = useRef(getFirestore(app)).current
+    const db = getFirestore(app.current)
 
     async function saveProject() {
         assert(user)
-        return await addDoc(collection(db, `users/${user.uid!}/projects/`), {
+        return await addDoc(getUserProjectsCollection(db, user), {
             pixels: pixels,
             name: projectName
         })
@@ -151,15 +178,8 @@ export default function Home() {
 
     return (
         <Box>
-            {user != null ? <Button onClick={async () => {
-                    await signOut(auth)
-                    forceUpdate((n) => !n)
-                }}>Logout</Button> :
-                <Button onClick={async () => {
-                    const result = await signInWithPopup(auth, new GithubAuthProvider())
-                    forceUpdate((n) => !n)
-                }}>Login with GitHub</Button>}
             <Container>
+                <TopBar auth={auth} forceUpdate={forceUpdate} db={db} user={user}/>
                 <div>{projectName}</div>
                 <ColorBlock color={color}></ColorBlock>
                 {palette.map((color, i) => <ColorButton key={i} setColor={setColor} color={color}></ColorButton>)}
