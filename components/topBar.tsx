@@ -19,12 +19,10 @@ export function TopBar({user, auth, db, forceUpdate, loadProject}: {
 
     const [projects, setProjects] = useState<Project[] | null>(null)
     if (user) {
-        return <Grid sx={{alignItems: 'end'}} container spacing={2}>
-            <Grid size={4}>
-
+        return <Grid sx={{alignItems: 'end', justifyContent: 'space-between'}} container>
                 <Typography variant="h3">Pixel Painter</Typography>
-            </Grid>
-            <Grid size={8}>
+            <Box>
+
                 <Button onClick={async () => {
                     await signOut(auth)
                     forceUpdate((n) => !n)
@@ -54,18 +52,14 @@ export function TopBar({user, auth, db, forceUpdate, loadProject}: {
                         </Paper>
                     </Container>
                 </Modal>
-            </Grid>
+            </Box>
         </Grid>
     }
-    return <Grid sx={{alignItems: 'end'}}container spacing={2}>
-        <Grid size={4}>
+    return <Grid sx={{alignItems: 'end', justifyContent: 'space-between'}} container>
             <Typography variant="h3">Pixel Painter</Typography>
-        </Grid>
-        <Grid size={8}>
             <Button onClick={async () => {
                 await signInWithPopup(auth, new GithubAuthProvider())
                 forceUpdate((n) => !n)
             }}>Login with GitHub</Button>
-        </Grid>
     </Grid>
 }
