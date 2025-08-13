@@ -10,6 +10,8 @@ import {initializeApp} from "firebase/app";
 import {getAnalytics} from "firebase/analytics";
 import {getAuth, GithubAuthProvider, signInWithPopup, signInWithRedirect, signOut, User} from "@firebase/auth";
 import {Box} from "@mui/system";
+import {addDoc, collection, doc, getFirestore} from "@firebase/firestore";
+import {setDoc} from "@firebase/firestore/lite";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -132,21 +134,33 @@ export default function Home() {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [pixels, setPixels] = useState<Property.BackgroundColor[]>(Array<Property.BackgroundColor>(width * height).fill("red"));
-    const app = initializeApp(firebaseConfig);
-    const auth = useRef(getAuth(app))
+    const [projectName, setProjectName] = useState("New Project")
+    const app = useRef(initializeApp(firebaseConfig)).current;
+    const auth = useRef(getAuth(app)).current;
+    const user = auth.currentUser
     const [_, forceUpdate] = useState<boolean>(false)
+    const db = useRef(getFirestore(app)).current
+
+    async function saveProject() {
+        assert(user)
+        return await addDoc(collection(db, `users/${user.uid!}/projects/`), {
+            pixels: pixels,
+            name: projectName
+        })
+    }
 
     return (
         <Box>
-            {auth.current.currentUser != null ? <Button onClick={async () => {
-                    await signOut(auth.current)
+            {user != null ? <Button onClick={async () => {
+                    await signOut(auth)
                     forceUpdate((n) => !n)
                 }}>Logout</Button> :
                 <Button onClick={async () => {
-                    const result = await signInWithPopup(auth.current, new GithubAuthProvider())
+                    const result = await signInWithPopup(auth, new GithubAuthProvider())
                     forceUpdate((n) => !n)
                 }}>Login with GitHub</Button>}
             <Container>
+                <div>{projectName}</div>
                 <ColorBlock color={color}></ColorBlock>
                 {palette.map((color, i) => <ColorButton key={i} setColor={setColor} color={color}></ColorButton>)}
                 <PixelCanvas ref={canvasRef} width={width} picked_color={color} height={height} scale={10}
@@ -157,6 +171,13 @@ export default function Home() {
                     a.download = "export.png"
                     a.click()
                 }}>Export</Button>
+                <Button onClick={async () => {
+                    if (user) {
+                        saveProject().catch(alert)
+                    } else {
+                        alert("You must login to save")
+                    }
+                }}>Save</Button>
             </Container>
         </Box>
     );
